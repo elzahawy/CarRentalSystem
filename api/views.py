@@ -28,23 +28,27 @@ class UserViewSet(viewsets.ModelViewSet):
 class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
-    permission_classes = [permissions.IsAdminUser]  # Only admins can create/update/delete
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]  # Public
+        return [permissions.IsAdminUser()]  # Admin-only CRUD
 
 # -----------------------
 # BOOKINGS
 # -----------------------
 class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # Custom endpoint: GET /bookings/user/
-    @action(detail=False, methods=['get'], url_path='user')
-    def get_user_bookings(self, request):
-        user = request.user
-        bookings = Booking.objects.filter(user=user)
-        serializer = self.get_serializer(bookings, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Booking.objects.all()
+        return Booking.objects.filter(user=self.request.user)
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 
 # -----------------------
 # PAYMENTS
@@ -53,3 +57,4 @@ class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post']
