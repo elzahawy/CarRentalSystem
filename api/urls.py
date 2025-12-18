@@ -8,10 +8,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 # DRF Router for CRUD endpoints
 router = DefaultRouter()
-router.register('users', UserViewSet)
-router.register('vehicles', VehicleViewSet)
-router.register('bookings', BookingViewSet)
-router.register('payments', PaymentViewSet)
+router.register('users', UserViewSet, basename='user')
+router.register('vehicles', VehicleViewSet, basename='vehicle')
+router.register('bookings', BookingViewSet, basename='booking')
+router.register('payments', PaymentViewSet, basename='payment')
 
 # URL Patterns
 urlpatterns = [
