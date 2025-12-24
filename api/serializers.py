@@ -58,6 +58,28 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+        read_only_fields = ['amount', 'payment_date']
+
+    def create(self, validated_data):
+        booking = validated_data['booking']
+
+        # ❌ Prevent duplicate payments
+        if Payment.objects.filter(booking=booking).exists():
+            raise serializers.ValidationError("This booking is already paid.")
+
+        # ✅ Auto-calculate payment
+        payment = Payment.objects.create(
+            booking=booking,
+            amount=booking.total_price,
+            method=validated_data.get('method')
+        )
+
+        # ✅ Update booking status
+        booking.status = "Paid"
+        booking.save()
+
+        return payment
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
